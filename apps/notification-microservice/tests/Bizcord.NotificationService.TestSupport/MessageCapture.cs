@@ -24,7 +24,14 @@ public sealed class MessageCapture<TMessage> : IAsyncDisposable
 
         _subscription = messageClient.SubscribeAsync<TMessage>(
             id,
-            (message, _) => _messages.Writer.WriteAsync(message).AsTask());
+            (message, _) =>
+            {
+                // TryWrite instead of WriteAsync: a message that arrives after the test has
+                // finished should be dropped, not turned into a broker level error.
+                _messages.Writer.TryWrite(message);
+
+                return Task.CompletedTask;
+            });
     }
 
     /// <summary>
@@ -34,20 +41,42 @@ public sealed class MessageCapture<TMessage> : IAsyncDisposable
     public Task WaitUntilReadyAsync() => _subscription;
 
     /// <summary>Waits for the next captured message, failing the test on timeout.</summary>
-    public async Task<TMessage> WaitForMessageAsync(TimeSpan timeout)
+    public Task<TMessage> WaitForMessageAsync(TimeSpan timeout) =>
+        WaitForMessageAsync(_ => true, timeout);
+
+    /// <summary>
+    /// Waits for the next captured message that matches <paramref name="predicate"/>,
+    /// failing the test on timeout.
+    ///
+    /// The predicate matters on a shared broker: a locally running instance of the service
+    /// is bound to the same exchange and publishes its own copy of the result event, so a
+    /// test has to recognise the message that belongs to it - usually by correlating on the
+    /// message id it published.
+    /// </summary>
+    public async Task<TMessage> WaitForMessageAsync(Func<TMessage, bool> predicate, TimeSpan timeout)
     {
+        ArgumentNullException.ThrowIfNull(predicate);
+
         await WaitUntilReadyAsync();
 
         using var cancellation = new CancellationTokenSource(timeout);
 
         try
         {
-            return await _messages.Reader.ReadAsync(cancellation.Token);
+            while (true)
+            {
+                var message = await _messages.Reader.ReadAsync(cancellation.Token);
+
+                if (predicate(message))
+                {
+                    return message;
+                }
+            }
         }
         catch (OperationCanceledException)
         {
             throw new TimeoutException(
-                $"No {typeof(TMessage).Name} was received within {timeout.TotalSeconds:0.#} seconds.");
+                $"No matching {typeof(TMessage).Name} was received within {timeout.TotalSeconds:0.#} seconds.");
         }
     }
 

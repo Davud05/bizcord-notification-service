@@ -1,0 +1,13 @@
+<Project>
+
+  <!--
+    Imported after every project file, which is where IsTestProject is set.
+    Without this flag, `dotnet test` on the solution reports "No test projects were found",
+    because the Microsoft.Testing.Platform runner looks for testing platform applications
+    rather than for the old VSTest marker.
+  -->
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+  </PropertyGroup>
+
+</Project>

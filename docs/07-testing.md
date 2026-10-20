@@ -1,11 +1,17 @@
 # 07 – Testing
 
 ```bash
-dotnet test                      # everything
+dotnet test                      # all 127 tests in the solution
 dotnet test apps/notification-microservice/tests/Bizcord.NotificationService.UnitTests
 ```
 
-Current status: **95 unit tests, 28 service tests, 4 integration tests — all green.**
+Current status: **95 unit tests, 28 service tests, 4 integration tests — 127 green.**
+
+xUnit v3 runs on Microsoft.Testing.Platform rather than VSTest, which the .NET 10 SDK only
+uses when the repository opts in. That opt-in is `global.json`, `dotnet.config` and the two
+properties in `Directory.Build.props`; `Directory.Build.targets` additionally marks the test
+projects as testing-platform applications, which is what makes solution-wide `dotnet test`
+find them.
 
 The integration tests need a broker and will *skip* rather than fail without one:
 
@@ -136,6 +142,17 @@ detected.MessageId.Should().Be(messagePostedEvent.MessageId);
 
 `BrokerAvailability` probes the broker first and the tests call `Assert.SkipWhen`, so a
 developer without Docker gets skipped tests instead of a red build.
+
+Two details make these tests survive a shared broker, which is exactly the situation they
+are meant to model:
+
+* **Each test host gets its own queue** (`notification-service-it-{guid}`), so parallel hosts
+  never become competing consumers of each other's messages.
+* **Captured events are correlated on `MessageId`, and the REST assertion polls.** If the
+  Compose stack is running, that instance is bound to the same exchange and publishes its
+  own copy of `MentionDetectedEvent` from its own store. A test that assumed it was the only
+  consumer would be flaky; correlating and polling is both robust and a more honest
+  assertion about an asynchronous flow.
 
 ## What is deliberately not tested
 
