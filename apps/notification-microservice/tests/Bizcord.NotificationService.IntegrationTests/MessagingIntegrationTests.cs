@@ -58,7 +58,12 @@ public class MessagingIntegrationTests : IAsyncLifetime
 
         await _factory.MessageClient.PublishAsync(message);
 
-        var detected = await capture.WaitForMessageAsync(TimeSpan.FromSeconds(20));
+        // Correlate on the message id. Another instance of the service - a container that
+        // happens to be running locally - is bound to the same exchange and publishes its
+        // own copy, so the test has to pick out the event that belongs to this message.
+        var detected = await capture.WaitForMessageAsync(
+            candidate => candidate.MessageId == message.MessageId && candidate.RecipientId == mentioned,
+            TimeSpan.FromSeconds(20));
 
         detected.MessageId.Should().Be(message.MessageId, "the message id ties the whole flow together");
         detected.ChannelId.Should().Be(channel);
@@ -69,15 +74,48 @@ public class MessagingIntegrationTests : IAsyncLifetime
         detected.Preview.Should().Contain("the deploy is done");
         detected.ProcessedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(1));
 
-        // ... and the notification is readable through the REST API.
-        var client = _factory.CreateClient();
-        var notification = await client.GetFromJsonAsync<NotificationDto>(
-            $"/api/notifications/{detected.NotificationId}");
+        // ... and the notification this host stored becomes readable through its REST API.
+        // The query is by recipient rather than by the notification id from the event,
+        // because the id in a foreign copy of the event belongs to a foreign store, and it
+        // polls because the flow is asynchronous: the event can arrive from another
+        // consumer before this host has finished handling its own copy.
+        var notification = await WaitForNotificationAsync(mentioned, TimeSpan.FromSeconds(10));
 
-        notification.Should().NotBeNull();
-        notification!.RecipientId.Should().Be(mentioned);
+        notification.MessageId.Should().Be(message.MessageId);
         notification.Type.Should().Be(NotificationTypes.Mention);
         notification.Status.Should().Be(NotificationStatuses.Unread);
+        notification.Body.Should().Contain("the deploy is done");
+    }
+
+    /// <summary>
+    /// Polls the list endpoint until the recipient has a notification, so the test asserts
+    /// "eventually readable" instead of "readable in the same millisecond".
+    /// </summary>
+    private async Task<NotificationDto> WaitForNotificationAsync(Guid recipientId, TimeSpan timeout)
+    {
+        var client = _factory.CreateClient();
+        var deadline = DateTime.UtcNow + timeout;
+
+        while (true)
+        {
+            var notifications = await client.GetFromJsonAsync<List<NotificationDto>>(
+                $"/api/notifications?recipientId={recipientId}");
+
+            if (notifications is { Count: > 0 })
+            {
+                notifications.Should().ContainSingle("one mention produces exactly one notification");
+
+                return notifications[0];
+            }
+
+            if (DateTime.UtcNow > deadline)
+            {
+                throw new TimeoutException(
+                    $"No notification for recipient {recipientId} appeared within {timeout.TotalSeconds:0} seconds.");
+            }
+
+            await Task.Delay(TimeSpan.FromMilliseconds(100));
+        }
     }
 
     [Fact]
@@ -120,7 +158,9 @@ public class MessagingIntegrationTests : IAsyncLifetime
         var read = await client.PostAsync($"/api/notifications/{created!.Id}/read", content: null);
         read.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var published = await capture.WaitForMessageAsync(TimeSpan.FromSeconds(20));
+        var published = await capture.WaitForMessageAsync(
+            candidate => candidate.NotificationId == created.Id,
+            TimeSpan.FromSeconds(20));
 
         published.NotificationId.Should().Be(created.Id);
         published.RecipientId.Should().Be(created.RecipientId);
