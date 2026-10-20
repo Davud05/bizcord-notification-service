@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Bizcord.NotificationService.Application</RootNamespace>
+    <AssemblyName>Bizcord.NotificationService.Application</AssemblyName>
+    <Description>Use cases of the Notification service: application services and the message handlers that react to integration events.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Bizcord.NotificationService.Domain\Bizcord.NotificationService.Domain.csproj" />
+    <ProjectReference Include="..\..\..\..\packages\MessageClient\src\Bizcord.MessageClient\Bizcord.MessageClient.csproj" />
+    <ProjectReference Include="..\..\..\..\packages\Shared.Contracts\src\Bizcord.Shared.Contracts\Bizcord.Shared.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+  </ItemGroup>
+
+</Project>
