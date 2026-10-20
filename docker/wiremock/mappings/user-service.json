@@ -1,0 +1,23 @@
+{
+  "mappings": [
+    {
+      "name": "GET /api/users/{id} - the contract the Notification service expects",
+      "request": {
+        "method": "GET",
+        "urlPathPattern": "/api/users/[0-9a-fA-F-]{36}"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "jsonBody": {
+          "id": "{{request.pathSegments.[2]}}",
+          "displayName": "Demo User",
+          "isActive": true
+        },
+        "transformers": ["response-template"]
+      }
+    }
+  ]
+}
