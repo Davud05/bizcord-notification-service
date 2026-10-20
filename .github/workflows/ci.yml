@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build, unit and service tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Bizcord.slnx
+
+      - name: Build
+        run: dotnet build Bizcord.slnx --configuration Release --no-restore
+
+      - name: Unit tests
+        run: >
+          dotnet test apps/notification-microservice/tests/Bizcord.NotificationService.UnitTests
+          --configuration Release --no-build
+
+      - name: Service tests
+        run: >
+          dotnet test apps/notification-microservice/tests/Bizcord.NotificationService.ServiceTests
+          --configuration Release --no-build
+
+  integration-test:
+    name: Integration tests against RabbitMQ
+    runs-on: ubuntu-latest
+    services:
+      rabbitmq:
+        image: rabbitmq:3-management
+        ports:
+          - 5672:5672
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Integration tests
+        env:
+          RABBITMQ_HOST: localhost
+        run: >
+          dotnet test apps/notification-microservice/tests/Bizcord.NotificationService.IntegrationTests
+          --configuration Release
+
+  docker:
+    name: Docker image builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The build context is the repository root, because the service references the
+      # shared packages in packages/.
+      - name: Build the notification service image
+        run: >
+          docker build
+          --file apps/notification-microservice/Dockerfile
+          --tag bizcord/notification-service:${{ github.sha }}
+          .
