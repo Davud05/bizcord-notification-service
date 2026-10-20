@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Bizcord.Shared.Contracts</RootNamespace>
+    <AssemblyName>Bizcord.Shared.Contracts</AssemblyName>
+    <Description>Public data contracts (events and shared models) that other Bizcord microservices may depend on.</Description>
+  </PropertyGroup>
+
+</Project>
