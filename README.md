@@ -1,5 +1,7 @@
 # Bizcord – Notification Service
 
+[![CI](https://github.com/Davud05/bizcord-notification-service/actions/workflows/ci.yml/badge.svg)](https://github.com/Davud05/bizcord-notification-service/actions/workflows/ci.yml)
+
 System Integration (E2026) · semester project · **Bizcord**, a Discord-like enterprise
 communication platform.
 
