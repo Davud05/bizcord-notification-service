@@ -1,0 +1,27 @@
+<Solution>
+  <Folder Name="/apps/">
+    <Folder Name="/apps/notification-microservice/">
+      <Project Path="apps/notification-microservice/src/Bizcord.NotificationService.Domain/Bizcord.NotificationService.Domain.csproj" />
+      <Project Path="apps/notification-microservice/src/Bizcord.NotificationService.Application/Bizcord.NotificationService.Application.csproj" />
+      <Project Path="apps/notification-microservice/src/Bizcord.NotificationService.Infrastructure/Bizcord.NotificationService.Infrastructure.csproj" />
+      <Project Path="apps/notification-microservice/src/Bizcord.NotificationService.Presentation/Bizcord.NotificationService.Presentation.csproj" />
+      <Folder Name="/apps/notification-microservice/tests/">
+        <Project Path="apps/notification-microservice/tests/Bizcord.NotificationService.TestSupport/Bizcord.NotificationService.TestSupport.csproj" />
+        <Project Path="apps/notification-microservice/tests/Bizcord.NotificationService.UnitTests/Bizcord.NotificationService.UnitTests.csproj" />
+        <Project Path="apps/notification-microservice/tests/Bizcord.NotificationService.ServiceTests/Bizcord.NotificationService.ServiceTests.csproj" />
+        <Project Path="apps/notification-microservice/tests/Bizcord.NotificationService.IntegrationTests/Bizcord.NotificationService.IntegrationTests.csproj" />
+      </Folder>
+    </Folder>
+  </Folder>
+  <Folder Name="/packages/">
+    <Project Path="packages/Shared.Contracts/src/Bizcord.Shared.Contracts/Bizcord.Shared.Contracts.csproj" />
+    <Project Path="packages/MessageClient/src/Bizcord.MessageClient/Bizcord.MessageClient.csproj" />
+  </Folder>
+  <Folder Name="/solution-items/">
+    <File Path="README.md" />
+    <File Path="docker-compose.yml" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+  </Folder>
+</Solution>
