@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>Bizcord.NotificationService.Presentation</RootNamespace>
+    <AssemblyName>Bizcord.NotificationService.Presentation</AssemblyName>
+    <Description>HTTP entry point of the Notification service: controllers, validation and problem details.</Description>
+    <UserSecretsId>bizcord-notification-service</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Bizcord.NotificationService.Application\Bizcord.NotificationService.Application.csproj" />
+    <ProjectReference Include="..\Bizcord.NotificationService.Infrastructure\Bizcord.NotificationService.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Bizcord.NotificationService.ServiceTests" />
+    <InternalsVisibleTo Include="Bizcord.NotificationService.IntegrationTests" />
+  </ItemGroup>
+
+</Project>

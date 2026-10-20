@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Bizcord.NotificationService.Infrastructure</RootNamespace>
+    <AssemblyName>Bizcord.NotificationService.Infrastructure</AssemblyName>
+    <Description>Adapters for the ports defined by the domain and application layers: storage and HTTP clients for other microservices.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Bizcord.NotificationService.Application\Bizcord.NotificationService.Application.csproj" />
+    <ProjectReference Include="..\Bizcord.NotificationService.Domain\Bizcord.NotificationService.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+  </ItemGroup>
+
+</Project>
