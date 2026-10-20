@@ -1,5 +1,6 @@
 using Bizcord.MessageClient.Subscriptions;
 using EasyNetQ;
+using EasyNetQ.ConnectionString;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -22,10 +23,22 @@ public static class MessageClientServiceCollectionExtensions
         IConfiguration configuration,
         string? subscriptionId = null)
     {
-        var options = ReadOptions(configuration, subscriptionId);
+        // Configuration is read when the options are first resolved, never here. A test host
+        // adds its own configuration sources after Program.cs has run, so anything read at
+        // registration time would silently ignore them.
+        services.AddOptions<MessageClientOptions>()
+            .Bind(configuration.GetSection(MessageClientOptions.SectionName))
+            .PostConfigure(options => ApplyFallbacks(options, configuration, subscriptionId))
+            .Validate(options => !string.IsNullOrWhiteSpace(options.Host), "RabbitMq:Host must be configured.")
+            .Validate(options => !string.IsNullOrWhiteSpace(options.SubscriptionId), "RabbitMq:SubscriptionId must be configured.");
 
-        services.AddSingleton<IOptions<MessageClientOptions>>(Options.Create(options));
-        services.AddEasyNetQ(options.ToConnectionString()).UseSystemTextJson();
+        services.AddEasyNetQ(provider =>
+        {
+            var options = provider.GetRequiredService<IOptions<MessageClientOptions>>().Value;
+
+            return new ConnectionStringParser().Parse(options.ToConnectionString());
+        }).UseSystemTextJson();
+
         services.TryAddSingleton<IMessageClient, EasyNetQMessageClient>();
         services.AddHostedService<MessageSubscriberService>();
 
@@ -45,11 +58,11 @@ public static class MessageClientServiceCollectionExtensions
         return services;
     }
 
-    private static MessageClientOptions ReadOptions(IConfiguration configuration, string? subscriptionId)
+    private static void ApplyFallbacks(
+        MessageClientOptions options,
+        IConfiguration configuration,
+        string? subscriptionId)
     {
-        var options = new MessageClientOptions();
-        configuration.GetSection(MessageClientOptions.SectionName).Bind(options);
-
         // RABBITMQ_HOST is the variable name used by the course's docker-compose file, so
         // support it as a shorthand for RabbitMq__Host.
         var hostOverride = configuration["RABBITMQ_HOST"];
@@ -58,20 +71,11 @@ public static class MessageClientServiceCollectionExtensions
             options.Host = hostOverride;
         }
 
-        // The argument is a fallback: explicit configuration always wins, which lets a
-        // test or a second deployment of the same service use its own queue.
-        var configuredSubscriptionId = configuration[$"{MessageClientOptions.SectionName}:SubscriptionId"];
-
-        if (!string.IsNullOrWhiteSpace(subscriptionId) && string.IsNullOrWhiteSpace(configuredSubscriptionId))
+        // The argument is only a fallback: explicit configuration always wins, which is how
+        // a test or a second deployment of the same service gets its own queue.
+        if (string.IsNullOrWhiteSpace(options.SubscriptionId) && !string.IsNullOrWhiteSpace(subscriptionId))
         {
             options.SubscriptionId = subscriptionId;
         }
-
-        if (string.IsNullOrWhiteSpace(options.Host))
-        {
-            throw new InvalidOperationException("RabbitMq:Host must be configured.");
-        }
-
-        return options;
     }
 }

@@ -20,10 +20,12 @@ public sealed class MessageClientOptions
     public string Password { get; set; } = "guest";
 
     /// <summary>
-    /// Logical name of this service. Used as the default subscription id, so queues in
-    /// RabbitMQ are named after the consumer that owns them.
+    /// Logical name of this consumer, which becomes the queue name in RabbitMQ. There is no
+    /// default on purpose: sharing a queue by accident turns separate services into
+    /// competing consumers. <c>AddMessageClient</c> fills it in per service when
+    /// configuration does not.
     /// </summary>
-    public string SubscriptionId { get; set; } = "bizcord-service";
+    public string SubscriptionId { get; set; } = string.Empty;
 
     /// <summary>Seconds EasyNetQ waits for a broker operation before giving up.</summary>
     public ushort TimeoutSeconds { get; set; } = 10;
