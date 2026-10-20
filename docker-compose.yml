@@ -1,0 +1,67 @@
+name: bizcord-notification
+
+services:
+  # ---------------------------------------------------------------------------
+  # The message broker the whole Bizcord system communicates through.
+  # ---------------------------------------------------------------------------
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: bizcord-rabbitmq
+    ports:
+      # The host ports can be overridden when something else already uses them,
+      # for example: RABBITMQ_UI_PORT=15673 docker compose up -d
+      - "${RABBITMQ_AMQP_PORT:-5672}:5672"  # AMQP, used by the services
+      - "${RABBITMQ_UI_PORT:-15672}:15672"  # management UI (guest / guest)
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      # "depends_on" alone only waits for the container to start, not for RabbitMQ to be
+      # able to accept connections - that is what this check is for.
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  # ---------------------------------------------------------------------------
+  # The Notification microservice.
+  # ---------------------------------------------------------------------------
+  notification-service:
+    build:
+      context: .
+      dockerfile: apps/notification-microservice/Dockerfile
+    container_name: bizcord-notification-service
+    ports:
+      - "${NOTIFICATION_SERVICE_PORT:-8080}:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      # Read by the message client; see MessageClientOptions.
+      RABBITMQ_HOST: rabbitmq
+      RabbitMq__Port: "5672"
+      RabbitMq__Username: guest
+      RabbitMq__Password: guest
+      RabbitMq__SubscriptionId: notification-service
+      # Other teams' services. Point these at the real ones once they are deployed.
+      Services__UserDirectory__BaseUrl: http://teammate-services:8080
+      Services__ChannelDirectory__BaseUrl: http://teammate-services:8080
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      teammate-services:
+        condition: service_started
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Stand-in for the microservices other teams own (User and Channel), so the
+  # stack can be demoed before their services exist. Same WireMock that the
+  # service tests use, here as a container with static mappings.
+  # ---------------------------------------------------------------------------
+  teammate-services:
+    image: wiremock/wiremock:3.13.1
+    container_name: bizcord-teammate-services
+    command: ["--global-response-templating", "--verbose"]
+    ports:
+      - "${TEAMMATE_SERVICES_PORT:-8081}:8080"
+    volumes:
+      - ./docker/wiremock/mappings:/home/wiremock/mappings:ro
