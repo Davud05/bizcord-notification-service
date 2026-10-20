@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Bizcord.NotificationService.TestSupport</RootNamespace>
+    <AssemblyName>Bizcord.NotificationService.TestSupport</AssemblyName>
+    <Description>Test doubles and helpers shared by the unit, service and integration test projects.</Description>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\packages\MessageClient\src\Bizcord.MessageClient\Bizcord.MessageClient.csproj" />
+    <ProjectReference Include="..\..\..\..\packages\Shared.Contracts\src\Bizcord.Shared.Contracts\Bizcord.Shared.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

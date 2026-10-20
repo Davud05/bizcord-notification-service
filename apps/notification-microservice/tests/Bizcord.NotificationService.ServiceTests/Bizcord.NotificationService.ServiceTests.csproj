@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Bizcord.NotificationService.ServiceTests</RootNamespace>
+    <AssemblyName>Bizcord.NotificationService.ServiceTests</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Bizcord.NotificationService.Presentation\Bizcord.NotificationService.Presentation.csproj" />
+    <ProjectReference Include="..\Bizcord.NotificationService.TestSupport\Bizcord.NotificationService.TestSupport.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="WireMock.Net" />
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="FluentAssertions" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Bizcord.NotificationService.UnitTests</RootNamespace>
+    <AssemblyName>Bizcord.NotificationService.UnitTests</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <!-- These tests never need to cancel mid-call; passing a token everywhere only adds noise. -->
+    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Bizcord.NotificationService.Application\Bizcord.NotificationService.Application.csproj" />
+    <ProjectReference Include="..\..\src\Bizcord.NotificationService.Domain\Bizcord.NotificationService.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Bizcord.NotificationService.Infrastructure\Bizcord.NotificationService.Infrastructure.csproj" />
+    <ProjectReference Include="..\Bizcord.NotificationService.TestSupport\Bizcord.NotificationService.TestSupport.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="FluentAssertions" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>
