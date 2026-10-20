@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Bizcord.NotificationService.Domain</RootNamespace>
+    <AssemblyName>Bizcord.NotificationService.Domain</AssemblyName>
+    <Description>The internal domain model of the Notification bounded context. Deliberately free of framework and infrastructure dependencies.</Description>
+  </PropertyGroup>
+
+</Project>
